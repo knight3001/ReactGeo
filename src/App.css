@@ -53,3 +53,41 @@ table th,td{
     display: none;   
 }
 /* Bootstrap Checkbox Styles */
+
+@keyframes msgflash{ 0% { opacity: 1; } 50% { opacity:0.1; } 100% { opacity:1; } }
+@-webkit-keyframes msgflash{ 0% { opacity: 1; } 50% { opacity:0.1; } 100% { opacity:1; } }
+.flashRow{
+    animation-name: msgflash; -webkit-animation-name: msgflash;
+    animation-iteration-count: 3; -webkit-animation-iteration-count: 3;
+    animation-direction: alternate; -webkit-animation-direction:alternate;
+    animation-delay: 0.1s; -webkit-animation-delay: 0.1s;
+    animation-duration: 0.35s; -webkit-animation-duration: 0.35s;
+}
+
+/* listItem */
+.listItem{
+  margin: .5em;
+  padding: .3em .5em .3em 0;
+  border-radius: 4px;
+  height: 40px;
+  text-align: left;
+}
+.listItem:hover{left: .1em;}
+
+.listItem .badge-left{
+    display: inline-block;
+    font-size: small;
+    color: white;
+    background-color: rgb(96, 125, 139);
+    line-height: 1em;
+    position: relative;
+    left: -1px;
+    top: -4px;
+    height: 100%;
+    margin-right: 0.8em;
+    padding: 0.8em 0.7em 0px;
+    border-radius: 4px 0px 0px 4px;
+    height: 38px;
+}
+
+/* rounded-list */

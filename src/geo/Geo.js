@@ -8,9 +8,6 @@ const ApiUrl = "http://localhost:5000/job/";
 class UserForm extends Component {
     constructor(props) {
         super(props);
-        this.state = {
-            data: []
-        }
         this.handleFileChange = this.handleFileChange.bind(this);
     }
 
@@ -21,25 +18,32 @@ class UserForm extends Component {
 
         let result = [];
         let row;
+        let index = 0;
+        let _that = this;
         let reader = new FileReader();
         reader.onload = function (event) {
-            let csv = reader.result.split('\n');
-            for (let i = 0; i < csv.length; i++) {
+            let line = reader.result.split('\n');
+            for (let i = 0; i < line.length; i++) {
                 row = {};
-                row["name"] = csv[i].split(",")[0];
-                row["address"] = csv[i].split(",")[1];
+                index = line[i].indexOf(",", 1);
+                row["name"] = line[i].slice(0, index);
+                row["address"] = line[i].slice(index + 1, line[i].length).replace(/["]/g, "");
                 result.push(row);
             }
             let json = JSON.parse(JSON.stringify(result));
             axios({
-                method:'post',
+                method: 'post',
                 url: ApiUrl,
                 data: json
             })
                 .then(response => {
                     if (response.status === 200) {
+                        _that.props.onUserChange(
+                            response.data["jobid"]
+                        );
                         console.log(response.data);
                     }
+                    //console.log(response);
                 })
                 .catch(error => {
                     console.log(error);
@@ -65,18 +69,78 @@ class UserForm extends Component {
     }
 }
 
+class JobTable extends Component {
+
+    render() {
+        let buf = [];
+        const jobList = this.props.jobList;
+        for (let i = 0; i < jobList.length; i++) {
+            buf.push(<Job jobid={jobList[i]} key={i} />);
+        }
+        return (
+            <ol className="list-group">
+                {buf}
+            </ol>
+        )
+    }
+}
+
+class Job extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            code: "pending",
+            addresses: []
+        };
+    }
+
+    componentDidMount() {
+        const jobid = this.props.jobid;
+        axios.get(ApiUrl + jobid, {
+            params: {}
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    this.setState({
+                        code: response.data["code"]
+                    })
+                }
+            })
+            .catch(error => {
+                console.log(error);
+            });
+    }
+
+    render() {
+        const jobid = this.props.jobid;
+        const code = this.state.code;
+        return (
+            <li className="list-group-item listItem">
+                <span className="badge-left">{jobid}</span>
+                {code}
+            </li>
+        )
+    }
+}
+
 class Geo extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            jobList: [],
-            addressAll: {}
+            jobList: [12, 16, 17, 18]
         };
+        this.handleJobChange = this.handleJobChange.bind(this);
+    }
 
+    handleJobChange(jobid) {
+        this.setState({
+            jobList: this.state.jobList.concat([{
+                jobid
+            }])
+        });
     }
 
     render() {
-        const addressAll = this.state.addressAll;
         return (
             <div className="panel panel-default">
                 <div className="panel-heading"><h3 className="panel-title">Geo Location Request</h3></div>
@@ -84,9 +148,11 @@ class Geo extends Component {
                     <div className="row">
                         <div className="col-xs-12 col-sm-12 col-md-8 col-md-offset-2">
                             <UserForm
-                                addressAll={addressAll}
+                                onUserChange={this.handleJobChange}
                             />
-
+                            <JobTable
+                                jobList={this.state.jobList}
+                            />
                         </div>
                     </div>
                 </div>
