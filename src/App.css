@@ -1,0 +1,55 @@
+@import url("../node_modules/bootstrap/dist/css/bootstrap.css");
+@import url("./css/bootstrap.icon-extra.min.css");
+
+#root {
+  margin: 0;
+  padding: 0;
+}
+
+.App {
+  text-align: center;
+}
+
+.hidden{
+  display: none;
+}
+.clear{
+  clear: both;
+}
+
+table th,td{
+  text-align: center;
+}
+
+.header{
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+@media screen and (max-width:415px){
+  
+}
+
+/* Bootstrap Checkbox Styles */
+.fancy-checkbox {
+    display: none;
+}
+
+.fancy-checkbox + .btn-group > label span {
+    width: 20px;
+}
+
+.fancy-checkbox + .btn-group > label span:first-child {
+    display: none;
+}
+.fancy-checkbox + .btn-group > label span:last-child {
+    display: inline-block;   
+}
+
+.fancy-checkbox:checked + .btn-group > label span:first-child {
+    display: inline-block;
+}
+.fancy-checkbox:checked + .btn-group > label span:last-child {
+    display: none;   
+}
+/* Bootstrap Checkbox Styles */
