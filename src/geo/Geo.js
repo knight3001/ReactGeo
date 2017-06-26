@@ -31,11 +31,11 @@ class UserForm extends Component {
                 result.push(row);
             }
             let json = JSON.parse(JSON.stringify(result));
-
-            axios.get(ApiUrl + "2", {
-                    params: {
-                    }
-                })
+            axios({
+                method:'post',
+                url: ApiUrl,
+                data: json
+            })
                 .then(response => {
                     if (response.status === 200) {
                         console.log(response.data);
