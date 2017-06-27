@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import moment from 'moment';
 
-const ApiUrl = "http://localhost:5000/job/";
+const ApiUrl = "http://localhost:5000/";
 
 class UserForm extends Component {
     constructor(props) {
@@ -33,17 +33,16 @@ class UserForm extends Component {
             let json = JSON.parse(JSON.stringify(result));
             axios({
                 method: 'post',
-                url: ApiUrl,
+                url: ApiUrl + "job/",
                 data: json
             })
                 .then(response => {
-                    if (response.status === 200) {
+                    if (response.status === 202) {
                         _that.props.onUserChange(
                             response.data["jobid"]
                         );
                         //console.log(response.data);
                     }
-                    //console.log(response);
                 })
                 .catch(error => {
                     console.log(error);
@@ -101,16 +100,37 @@ class Job extends Component {
         this.checkJobStatus(jobid);
     }
 
+    /*componentDidUpdate(prevProps, prevState) {
+        if(prevState.code !== this.state.code && this.state.code === "complete"){
+            const jobid = this.props.jobid;
+            this.getJobData(jobid);
+        }
+    }*/
+    
     handleClick() {
         const jobid = this.props.jobid;
         this.setState({
             code: "waiting"
         })
-        this.checkJobStatus(jobid);
+        this.getJobData(jobid);
     }
 
     checkJobStatus(jobid) {
-        axios.get(ApiUrl + jobid, {
+        axios.get(ApiUrl + "queue/" + jobid, {
+            params: {}
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    this.getJobData(jobid);
+                }
+            })
+            .catch(error => {
+                console.log(error);
+            });
+    }
+
+    getJobData(jobid) {
+        axios.get(ApiUrl + "job/" + jobid, {
             params: {}
         })
             .then(response => {
@@ -186,7 +206,7 @@ class Geo extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            jobList: [17, 14]
+            jobList: []
         };
         this.handleJobChange = this.handleJobChange.bind(this);
     }

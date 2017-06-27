@@ -74,7 +74,7 @@ table th,td{
   background-color: #ddd;
 }
 .listItem:hover{
-  left: .1em;
+  xleft: .1em;
   background-color: #fff;
 }
 
@@ -111,8 +111,8 @@ table th,td{
 }
 
 .listItem .list-table{
-  width: 99%;
-  margin: .5em;
+  width: 96%;
+  margin: 8px 2%;
 }
 
 .listItem .list-table td, .listItem .list-table th{
