@@ -41,7 +41,7 @@ class UserForm extends Component {
                         _that.props.onUserChange(
                             response.data["jobid"]
                         );
-                        console.log(response.data);
+                        //console.log(response.data);
                     }
                     //console.log(response);
                 })
@@ -78,9 +78,9 @@ class JobTable extends Component {
             buf.push(<Job jobid={jobList[i]} key={i} />);
         }
         return (
-            <ol className="list-group">
+            <div className="list-group">
                 {buf}
-            </ol>
+            </div>
         )
     }
 }
@@ -92,17 +92,32 @@ class Job extends Component {
             code: "pending",
             addresses: []
         };
+
+        this.handleClick = this.handleClick.bind(this);
     }
 
     componentDidMount() {
         const jobid = this.props.jobid;
+        this.checkJobStatus(jobid);
+    }
+
+    handleClick() {
+        const jobid = this.props.jobid;
+        this.setState({
+            code: "waiting"
+        })
+        this.checkJobStatus(jobid);
+    }
+
+    checkJobStatus(jobid) {
         axios.get(ApiUrl + jobid, {
             params: {}
         })
             .then(response => {
                 if (response.status === 200) {
                     this.setState({
-                        code: response.data["code"]
+                        code: response.data["code"],
+                        addresses: response.data["results"]
                     })
                 }
             })
@@ -114,12 +129,56 @@ class Job extends Component {
     render() {
         const jobid = this.props.jobid;
         const code = this.state.code;
-        return (
-            <li className="list-group-item listItem">
-                <span className="badge-left">{jobid}</span>
-                {code}
-            </li>
-        )
+        const addresses = this.state.addresses;
+        if (code === "pending") {
+            return (
+                <div className="list-group-item listItem">
+                    <span className="badge-left">{jobid}</span>
+                    <span className="badge-status" style={{ color: "red" }}>{code}</span>
+                    <button type="button" className="btn btn-info" onClick={this.handleClick}>Update</button>
+                </div>
+            )
+        }
+        else if (code === "waiting") {
+            return (
+                <div className="list-group-item listItem">
+                    <span className="badge-left">{jobid}</span>
+                    <span className="badge-status" style={{ color: "yellow" }}>{code}</span>
+                    <span className="spinner">
+                        <div className="bounce1"></div>
+                        <div className="bounce2"></div>
+                        <div className="bounce3"></div>
+                    </span>
+                    <span className="clear"></span>
+                </div>
+            )
+        }
+        else {
+            let buf = [];
+            for (let i = 0; i < addresses.length; i++) {
+                buf.push(<tr key={i}><td>{addresses[i]["name"]}</td><td>{addresses[i]["address"]}</td>
+                    <td>{addresses[i]["latitude"]}</td><td>{addresses[i]["longitude"]}</td></tr>)
+            }
+            return (
+                <div className="list-group-item listItem">
+                    <span className="badge-left">{jobid}</span>
+                    <span className="badge-status flashRow" style={{ color: "green" }}>{code}</span>
+                    <table className="list-table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Address</th>
+                                <th>Latitude</th>
+                                <th>longitude</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {buf}
+                        </tbody>
+                    </table>
+                </div>
+            )
+        }
     }
 }
 
@@ -127,16 +186,14 @@ class Geo extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            jobList: [12, 16, 17, 18]
+            jobList: [17, 14]
         };
         this.handleJobChange = this.handleJobChange.bind(this);
     }
 
     handleJobChange(jobid) {
         this.setState({
-            jobList: this.state.jobList.concat([{
-                jobid
-            }])
+            jobList: this.state.jobList.concat(jobid)
         });
     }
 
