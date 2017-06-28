@@ -8,6 +8,10 @@ const ApiUrl = "http://localhost:5000/";
 class UserForm extends Component {
     constructor(props) {
         super(props);
+        this.state = {
+            error: "",
+            file: ""
+        };
         this.handleFileChange = this.handleFileChange.bind(this);
     }
 
@@ -15,39 +19,82 @@ class UserForm extends Component {
         var file = this.refs.csv.files[0];
         if (!file)
             return;
+        this.setState({
+            file: file.name
+        })
+
+        if (file.type !== "text/plain" && file.type !== "application/vnd.ms-excel") {
+            this.setState({
+                error: "not a csv or txt file"
+            })
+            return;
+        }
 
         let result = [];
-        let row;
+        let row, name, address;
         let index = 0;
-        let _that = this;
         let reader = new FileReader();
         reader.onload = function (event) {
+            if (reader.result.trim() === "") {
+                this.setState({
+                    error: "empty file"
+                })
+                return;
+            }
             let line = reader.result.split('\n');
             for (let i = 0; i < line.length; i++) {
                 row = {};
-                index = line[i].indexOf(",", 1);
-                row["name"] = line[i].slice(0, index);
-                row["address"] = line[i].slice(index + 1, line[i].length).replace(/["]/g, "");
-                result.push(row);
+                if (line[i].trim() !== "") {
+                    index = line[i].indexOf(",", 1);
+                    if (index <= 0) {
+                        this.setState({
+                            error: "wrong format"
+                        })
+                        return;
+                    }
+                    name = line[i].slice(0, index).trim();
+                    address = line[i].slice(index + 1, line[i].length).replace(/["]/g, "").trim();
+                    if (name === "" || address === "") {
+                        this.setState({
+                            error: "wrong format"
+                        })
+                        return;
+                    }
+                    row["name"] = name;
+                    row["address"] = address;
+                    result.push(row);
+                }
             }
             let json = JSON.parse(JSON.stringify(result));
             axios({
                 method: 'post',
                 url: ApiUrl + "job/",
-                data: json
+                data: json,
+                validateStatus: function (status) {
+                    return status === 202 || status === 400;
+                }
             })
                 .then(response => {
                     if (response.status === 202) {
-                        _that.props.onUserChange(
+                        this.setState({
+                            error: ""
+                        })
+                        this.props.onUserChange(
                             response.data["jobid"]
                         );
-                        //console.log(response.data);
+                    }
+                    else if (response.status === 400) {
+                        this.setState({
+                            error: response.data["error"]
+                        })
                     }
                 })
                 .catch(error => {
-                    console.log(error);
+                    this.setState({
+                        error: error.message
+                    })
                 });
-        }
+        }.bind(this);
         // when the file is read it triggers the onload event above.
         reader.readAsText(file, 'UTF-8');
     }
@@ -57,10 +104,19 @@ class UserForm extends Component {
             <form className="form-horizontal">
                 <fieldset>
                     <div className="form-group">
-                        <label className="control-label btn btn-primary">
+                        <label className="control-label btn btn-primary col-md-1 col-md-offset-4">
                             Browse File
                             <input type="file" className="hidden" accept=".csv,.txt" ref="csv" onChange={this.handleFileChange} />
                         </label>
+                        <span className="help-block col-md-3">Please select csv or txt data file.</span>
+                        <div className="clear"></div>
+                        {this.state.file !== "" &&
+                            <div className="col-md-4 col-md-offset-4 well well-sm" style={{ marginTop: "5px", textAlign: "center" }}>{this.state.file}</div>
+                        }
+                        <div className="clear"></div>
+                        {this.state.error !== "" &&
+                            <div className="alert alert-danger" style={{ marginTop: "5px" }}>{this.state.error}</div>
+                        }
                     </div>
                 </fieldset>
             </form>
@@ -89,7 +145,8 @@ class Job extends Component {
         super(props);
         this.state = {
             code: "pending",
-            addresses: []
+            addresses: [],
+            message: ""
         };
 
         this.handleClick = this.handleClick.bind(this);
@@ -106,7 +163,7 @@ class Job extends Component {
             this.getJobData(jobid);
         }
     }*/
-    
+
     handleClick() {
         const jobid = this.props.jobid;
         this.setState({
@@ -117,21 +174,36 @@ class Job extends Component {
 
     checkJobStatus(jobid) {
         axios.get(ApiUrl + "queue/" + jobid, {
-            params: {}
+            params: {},
+            validateStatus: function (status) {
+                return status === 200 || status === 400;
+            }
         })
             .then(response => {
                 if (response.status === 200) {
                     this.getJobData(jobid);
                 }
+                else if (response.status === 400) {
+                    this.setState({
+                        code: "error",
+                        message: response.data["error"]
+                    })
+                }
             })
             .catch(error => {
-                console.log(error);
+                this.setState({
+                    code: "error",
+                    message: error.message
+                })
             });
     }
 
     getJobData(jobid) {
         axios.get(ApiUrl + "job/" + jobid, {
-            params: {}
+            params: {},
+            validateStatus: function (status) {
+                return status === 200 || status === 400;
+            }
         })
             .then(response => {
                 if (response.status === 200) {
@@ -140,9 +212,18 @@ class Job extends Component {
                         addresses: response.data["results"]
                     })
                 }
+                else if (response.status === 400) {
+                    this.setState({
+                        code: "error",
+                        message: response.data["error"]
+                    })
+                }
             })
             .catch(error => {
-                console.log(error);
+                this.setState({
+                    code: "error",
+                    message: error.message
+                })
             });
     }
 
@@ -150,11 +231,12 @@ class Job extends Component {
         const jobid = this.props.jobid;
         const code = this.state.code;
         const addresses = this.state.addresses;
+        const message = this.state.message;
         if (code === "pending") {
             return (
                 <div className="list-group-item listItem">
                     <span className="badge-left">{jobid}</span>
-                    <span className="badge-status" style={{ color: "red" }}>{code}</span>
+                    <span className="badge-status" style={{ color: "orange" }}>{code}</span>
                     <button type="button" className="btn btn-info" onClick={this.handleClick}>Update</button>
                 </div>
             )
@@ -169,6 +251,16 @@ class Job extends Component {
                         <div className="bounce2"></div>
                         <div className="bounce3"></div>
                     </span>
+                    <span className="clear"></span>
+                </div>
+            )
+        }
+        else if (code === "error") {
+            return (
+                <div className="list-group-item listItem">
+                    <span className="badge-left">{jobid}</span>
+                    <span className="badge-status" style={{ color: "red" }}>{code}</span>
+                    <span className="error-msg alert-danger">{message}</span>
                     <span className="clear"></span>
                 </div>
             )
