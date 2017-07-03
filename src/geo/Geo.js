@@ -3,6 +3,8 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import moment from 'moment';
 
+import GoogleMapContainer from './Gmap';
+
 const ApiUrl = "http://localhost:5000/";
 
 class UserForm extends Component {
@@ -41,7 +43,7 @@ class UserForm extends Component {
                 })
                 return;
             }
-            let line = reader.result.split('\n');
+            let line = reader.result.split(/\r|\n/);
             for (let i = 0; i < line.length; i++) {
                 row = {};
                 if (line[i].trim() !== "") {
@@ -272,22 +274,26 @@ class Job extends Component {
                     <td>{addresses[i]["latitude"]}</td><td>{addresses[i]["longitude"]}</td></tr>)
             }
             return (
-                <div className="list-group-item listItem">
-                    <span className="badge-left">{jobid}</span>
-                    <span className="badge-status flashRow" style={{ color: "green" }}>{code}</span>
-                    <table className="list-table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Address</th>
-                                <th>Latitude</th>
-                                <th>longitude</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {buf}
-                        </tbody>
-                    </table>
+                <div>
+                    <div className="list-group-item listItem">
+                        <span className="badge-left">{jobid}</span>
+                        <span className="badge-status flashRow" style={{ color: "green" }}>{code}</span>
+                        <table className="list-table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Address</th>
+                                    <th>Latitude</th>
+                                    <th>longitude</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {buf}
+                            </tbody>
+                        </table>
+                    </div>
+                    <GoogleMapContainer addresses={addresses} />
+                    <hr className="style18" />
                 </div>
             )
         }
