@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { withGoogleMap, GoogleMap, Marker, InfoWindow } from "react-google-maps";
 import withScriptjs from "react-google-maps/lib/async/withScriptjs";
+import MarkerClusterer from "react-google-maps/lib/addons/MarkerClusterer";
 
 const ApiKey = "AIzaSyDdtB13gdB0BmgUvvbRe8K4_gv8n3g56aw";
 
@@ -12,19 +13,25 @@ const AsyncGoogleMapConst = withScriptjs(
                 defaultZoom={14}
                 defaultCenter={{ lat: -27.467464, lng: 153.025035 }}
             >
-                {props.markers.map(marker => (
-                    <Marker
-                        key={marker.key}
-                        position={marker.position}
-                        onClick={() => props.onMarkerClick(marker)}
-                    >
-                        {marker.showInfo && (
-                            <InfoWindow onCloseClick={() => props.onMarkerClose(marker)}>
-                                {marker.infoContent}
-                            </InfoWindow>
-                        )}
-                    </Marker>
-                ))}
+                <MarkerClusterer
+                averageCenter
+                enableRetinaIcons
+                gridSize={60}
+                >
+                    {props.markers.map(marker => (
+                        <Marker
+                            key={marker.key}
+                            position={marker.position}
+                            onClick={() => props.onMarkerClick(marker)}
+                        >
+                            {marker.showInfo && (
+                                <InfoWindow onCloseClick={() => props.onMarkerClose(marker)}>
+                                    {marker.infoContent}
+                                </InfoWindow>
+                            )}
+                        </Marker>
+                    ))}
+                </MarkerClusterer>
             </GoogleMap>
         )
     )
